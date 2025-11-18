@@ -1,25 +1,24 @@
 from multiprocessing import Pool
 import time
 
-from utils import cpu_intensive_task, sequential_execution
-from utils import NUM_REPS, NUM_TASKS, NUM_WORKERS
+from utils import cpu_intensive_task, sequential_execution, measure_time_decorator
+from utils import TASK_COMPLEXITY, NUM_TASKS, NUM_WORKERS
 
-
-def parallel_execution(num_tasks, num_reps):
-    start = time.time()
+@measure_time_decorator
+def parallel_execution(num_tasks, task_complexity):
     with Pool(processes=NUM_WORKERS) as pool:
-        results = pool.map(cpu_intensive_task, [num_reps] * num_tasks)
-    execution_time = time.time() - start
-    return results, execution_time
+        results = pool.map(cpu_intensive_task, [task_complexity] * num_tasks)
+    return results
 
 if __name__ == '__main__':
 
     # Sequential execution
-    results_seq , sequential_time = sequential_execution(NUM_TASKS, NUM_REPS)
+    results_seq , sequential_time = sequential_execution(NUM_TASKS, TASK_COMPLEXITY)
     print(f"Sequential execution: {sequential_time:.2f} seconds")
     
     # Parallel execution
-    results_par, parallel_time = parallel_execution(NUM_TASKS, NUM_REPS)
+    results_par, parallel_time = parallel_execution(NUM_TASKS, TASK_COMPLEXITY)
+    
     print(f"Parallel execution: {parallel_time:.2f} seconds")
     print(f"Speedup: {sequential_time/parallel_time:.2f}x")
     assert results_seq == results_par
