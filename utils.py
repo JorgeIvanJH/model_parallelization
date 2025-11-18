@@ -2,6 +2,7 @@ import os
 import time
 TASK_COMPLEXITY = 10000000
 NUM_TASKS = 10
+START_METHOD = 'spawn'  # 'fork' , 'spawn' or 'forkserver'
 NUM_WORKERS = os.cpu_count()
 
 def measure_time_decorator(func):

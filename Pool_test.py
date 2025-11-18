@@ -1,4 +1,4 @@
-from multiprocessing import Pool
+import multiprocessing as mp
 import time
 
 from utils import cpu_intensive_task, sequential_execution, measure_time_decorator
@@ -6,7 +6,7 @@ from utils import TASK_COMPLEXITY, NUM_TASKS, NUM_WORKERS
 
 @measure_time_decorator
 def parallel_execution(num_tasks, task_complexity):
-    with Pool(processes=NUM_WORKERS) as pool:
+    with mp.Pool(processes=NUM_WORKERS) as pool:
         results = pool.map(cpu_intensive_task, [task_complexity] * num_tasks)
     return results
 
