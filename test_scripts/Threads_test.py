@@ -1,15 +1,16 @@
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import threading
 import queue
-import time
-
 from utils import cpu_intensive_task, sequential_execution, measure_time_decorator, _ensure_no_gil
-from utils import TASK_COMPLEXITY, NUM_TASKS
+from utils import TASK_COMPLEXITY, NUM_TASKS, NUM_REPS, NUM_REPS
 
 def worker(result_queue, task_complexity):
     result = cpu_intensive_task(task_complexity)
     result_queue.put(result)
 
-@measure_time_decorator
+@measure_time_decorator(times=NUM_REPS)
 def parallel_execution(num_tasks, task_complexity):
     result_queue = queue.Queue()
     threads = []

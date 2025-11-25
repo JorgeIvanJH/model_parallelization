@@ -1,10 +1,12 @@
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from concurrent.futures import ProcessPoolExecutor, as_completed
-import time
 from utils import cpu_intensive_task, sequential_execution, measure_time_decorator
-from utils import TASK_COMPLEXITY, NUM_TASKS, NUM_WORKERS
+from utils import TASK_COMPLEXITY, NUM_TASKS, NUM_WORKERS, NUM_REPS
 import random
 
-@measure_time_decorator
+@measure_time_decorator(times=NUM_REPS)
 def async_parallel_execution(num_tasks, task_complexity):
     results = []
     with ProcessPoolExecutor(max_workers=NUM_WORKERS) as executor:
@@ -13,7 +15,7 @@ def async_parallel_execution(num_tasks, task_complexity):
             results.append(future.result())
     return results
 
-@measure_time_decorator
+@measure_time_decorator(times=NUM_REPS)
 def sync_parallel_execution(num_tasks, task_complexity):
     with ProcessPoolExecutor(max_workers=NUM_WORKERS) as executor:
         results = list(executor.map(cpu_intensive_task, [task_complexity] * num_tasks))

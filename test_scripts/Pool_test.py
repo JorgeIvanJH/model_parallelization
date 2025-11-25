@@ -1,8 +1,11 @@
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import multiprocessing as mp
 from utils import cpu_intensive_task, sequential_execution, measure_time_decorator
-from utils import TASK_COMPLEXITY, NUM_TASKS, NUM_WORKERS
+from utils import TASK_COMPLEXITY, NUM_TASKS, NUM_WORKERS, NUM_REPS
 
-@measure_time_decorator
+@measure_time_decorator(times=NUM_REPS)
 def parallel_execution(num_tasks, task_complexity):
     with mp.Pool(processes=NUM_WORKERS) as pool:
         results = pool.map(cpu_intensive_task, [task_complexity] * num_tasks)

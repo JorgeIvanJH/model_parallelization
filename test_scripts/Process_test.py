@@ -1,14 +1,15 @@
-import multiprocessing as mp
-import time
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import multiprocessing as mp
 from utils import cpu_intensive_task, sequential_execution, measure_time_decorator
-from utils import TASK_COMPLEXITY, NUM_TASKS, START_METHOD
+from utils import TASK_COMPLEXITY, NUM_TASKS, START_METHOD, NUM_REPS
 
 def worker(queue, task_complexity):
     result = cpu_intensive_task(task_complexity)
     queue.put(result)
 
-@measure_time_decorator
+@measure_time_decorator(times=NUM_REPS)
 def parallel_execution(num_tasks, task_complexity):
 
     queue = mp.Queue()
