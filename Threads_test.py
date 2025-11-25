@@ -2,7 +2,7 @@ import threading
 import queue
 import time
 
-from utils import cpu_intensive_task, sequential_execution, measure_time_decorator
+from utils import cpu_intensive_task, sequential_execution, measure_time_decorator, _ensure_no_gil
 from utils import TASK_COMPLEXITY, NUM_TASKS
 
 def worker(result_queue, task_complexity):
@@ -30,6 +30,9 @@ def parallel_execution(num_tasks, task_complexity):
     return results
 
 if __name__ == '__main__':
+
+    _ensure_no_gil()
+
     # Sequential execution
     results_seq, sequential_time = sequential_execution(NUM_TASKS, TASK_COMPLEXITY)
     print(f"Sequential execution: {sequential_time:.2f} seconds")

@@ -1,4 +1,4 @@
-name: model-parallelization
+name: python314
 channels:
   - conda-forge
   - defaults

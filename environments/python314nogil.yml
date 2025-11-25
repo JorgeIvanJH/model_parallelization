@@ -1,0 +1,11 @@
+name: python314nogil
+channels:
+  - conda-forge
+dependencies:
+  - python-freethreading=3.14
+  - python_abi=3.14.*=*cp314t  # ensures free-threaded Build
+  - pip
+  - numpy
+
+# To search for packages compatible with free-threaded Python, you can use:
+  # e.g: conda search -c conda-forge 'numpy*cp314t'
