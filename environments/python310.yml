@@ -1,9 +1,9 @@
-name: python314
+name: python310
 channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.14
+  - python=3.10
   - pip
   - numpy
   - pandas

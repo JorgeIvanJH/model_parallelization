@@ -6,6 +6,8 @@ dependencies:
   - python_abi=3.14.*=*cp314t  # ensures free-threaded Build
   - pip
   - numpy
+  # - pandas # Not yet supported for free-threaded Python
+  # - scikit-learn # Not yet supported for free-threaded Python
 
 # To search for packages compatible with free-threaded Python, you can use:
   # e.g: conda search -c conda-forge 'numpy*cp314t'
