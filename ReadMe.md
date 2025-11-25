@@ -2,9 +2,12 @@
     Threads: ~6.5x (Python 3.14 NoGil, No Support for Libraries yet)
     Process: ~4.8x (Python 3.x)
     Pool: ~3.5 (Python 3.x)
+    ProcessPoolExecutor: ~4.2 (Python >= 3.2)
 
 ## Findings
     Older versions of python are generally slower, both on sequential and on multiprocessing
+
+    Async processes are always a bit faster
 
     Each process has its own memory space:
         - Large datasets are duplicated across processes

@@ -1,6 +1,4 @@
 import multiprocessing as mp
-import time
-
 from utils import cpu_intensive_task, sequential_execution, measure_time_decorator
 from utils import TASK_COMPLEXITY, NUM_TASKS, NUM_WORKERS
 
