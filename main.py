@@ -16,7 +16,7 @@ TESTS = [
 def run_script(python_path, script_path):
     subprocess.run(
         [python_path, script_path],
-        capture_output=True,
+        capture_output=False,
         text=True,
         check=True
     )

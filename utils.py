@@ -1,12 +1,15 @@
 import os, sys, sysconfig
 import warnings, importlib, sys, sysconfig
 import time
+import json
+
 
 TASK_COMPLEXITY = 10000000
 NUM_TASKS = 10
 START_METHOD = 'spawn'  # 'fork' , 'spawn' or 'forkserver'
 NUM_WORKERS = os.cpu_count()
-NUM_REPS = 1 # number of repetitions for averaging timings
+NUM_REPS = 2 # number of repetitions for averaging timings
+RESULTS_FILE = "results/times.json"
 
 def _ensure_no_gil():
     supports_ft = sysconfig.get_config_var("Py_GIL_DISABLED") == 1
@@ -82,3 +85,38 @@ def sequential_execution(num_tasks=NUM_TASKS, task_complexity=TASK_COMPLEXITY):
     results = [cpu_intensive_task(task_complexity) for _ in range(num_tasks)]
     return results
 
+def store_results(file_name, name_method, sequential_time, parallel_time, speedup, num_reps=NUM_REPS):
+    """
+    Store average execution time and number of repetitions in a JSON file.
+
+    name_method [str]: Name of the parallelization method used (e.g., "Threads", "Process", etc.)
+    file_name [str]: Path to the JSON file where results are stored
+    """
+    try:
+        full_json = json.loads(open(file_name).read())
+    except Exception as e:
+        print(f"[ERROR] {e}")
+
+        full_json = {}
+
+    prev_times = full_json.get(name_method, {})
+    prev_avg_parallel_time = prev_times.get("avg_parallel_time", None)
+    prev_avg_sequential_time = prev_times.get("avg_sequential_time", None)
+    prev_avg_speedup = prev_times.get("avg_speedup", None)
+    prev_num_reps = prev_times.get("num_reps", 0)
+
+    new_avg_parallel_time = (prev_avg_parallel_time+parallel_time)/2 if prev_avg_parallel_time is not None else parallel_time
+    new_avg_sequential_time = (prev_avg_sequential_time+sequential_time)/2 if prev_avg_sequential_time is not None else sequential_time
+    new_avg_speedup = (prev_avg_speedup+speedup)/2 if prev_avg_speedup is not None else speedup
+    new_num_reps = prev_num_reps + num_reps
+    prev_times = {
+        "avg_sequential_time": new_avg_sequential_time,
+        "avg_parallel_time": new_avg_parallel_time,
+        "avg_speedup": new_avg_speedup,
+        "num_reps": new_num_reps
+    }
+    full_json[name_method] = prev_times
+
+
+    with open(file_name, 'w') as f:
+        json.dump(full_json, f, indent=4)
