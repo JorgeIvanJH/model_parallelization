@@ -1,0 +1,3 @@
+downloaded from the following sources:
+"Healthcare_Investments_and_Hospital_Stay.csv": https://www.kaggle.com/datasets/babyoda/healthcare-investments-and-length-of-hospital-stay
+"healthcare_noshows_appointments.csv": https://www.kaggle.com/datasets/samuelotiattakorah/healthcare-no-show-appointment-data?resource=download

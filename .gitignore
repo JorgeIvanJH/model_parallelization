@@ -1,3 +1,5 @@
+ml_models/saved_models
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -84,13 +86,14 @@ checkpoints_*/
 *.pth
 *.bin
 *.h5
+*.csv
 weights/
-data/
-datasets/
 outputs/
 results/
 *.npz
 *.npy
+*.joblib
+*.pkl
 
 # Large intermediate files
 *.tar

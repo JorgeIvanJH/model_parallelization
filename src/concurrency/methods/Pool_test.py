@@ -2,34 +2,16 @@ import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import multiprocessing as mp
-from utils import cpu_intensive_task, sequential_execution, measure_time_decorator, store_results
-from utils import TASK_COMPLEXITY, NUM_TASKS, START_METHOD, NUM_REPS, RESULTS_FILE
-
-def worker(queue, task_complexity):
-    result = cpu_intensive_task(task_complexity)
-    queue.put(result)
+from src.utils import cpu_intensive_task, sequential_execution, measure_time_decorator, store_results
+from src.utils import TASK_COMPLEXITY, NUM_TASKS, NUM_WORKERS, NUM_REPS, RESULTS_FILE
 
 @measure_time_decorator(times=NUM_REPS)
 def parallel_execution(num_tasks, task_complexity):
-
-    queue = mp.Queue()
-    processes = []
-    for i in range(num_tasks):
-        p = mp.Process(target=worker, args=(queue, task_complexity))
-        processes.append(p)
-        p.start()
-    # Wait for all processes to complete
-    for p in processes:
-        p.join()
-    results = []
-    while not queue.empty():
-        results.append(queue.get())
-    
+    with mp.Pool(processes=NUM_WORKERS) as pool:
+        results = pool.map(cpu_intensive_task, [task_complexity] * num_tasks)
     return results
 
 if __name__ == '__main__':
-
-    mp.set_start_method(START_METHOD)
 
     # Sequential execution
     results_seq, sequential_time = sequential_execution(NUM_TASKS, TASK_COMPLEXITY)
@@ -47,7 +29,6 @@ if __name__ == '__main__':
     print("OK")
     
     # Store Results
-    store_results(RESULTS_FILE, "Process",sequential_time, parallel_time, speedup, NUM_REPS)
-
+    store_results(RESULTS_FILE, "Pool",sequential_time, parallel_time, speedup, NUM_REPS)
 
 

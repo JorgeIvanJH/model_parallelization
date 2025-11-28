@@ -8,7 +8,7 @@ TASK_COMPLEXITY = 10000000
 NUM_TASKS = 10
 START_METHOD = 'spawn'  # 'fork' , 'spawn' or 'forkserver'
 NUM_WORKERS = os.cpu_count()
-NUM_REPS = 2 # number of repetitions for averaging timings
+NUM_REPS = 30 # number of repetitions for averaging timings
 RESULTS_FILE = "results/times.json"
 
 def _ensure_no_gil():
