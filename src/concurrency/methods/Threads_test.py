@@ -1,7 +1,7 @@
 import threading
 import queue
-from src.utils import cpu_intensive_task, sequential_execution, measure_time_decorator, _ensure_no_gil, store_results
-from src.utils import TASK_COMPLEXITY, NUM_TASKS, NUM_REPS, NUM_REPS, RESULTS_FILE
+from src.concurrency.utils import cpu_intensive_task, sequential_execution, measure_time_decorator, _ensure_no_gil, store_results
+from src.concurrency.utils import TASK_COMPLEXITY, NUM_TASKS, NUM_REPS, NUM_REPS, RESULTS_FILE
 
 def worker(result_queue, task_complexity):
     result = cpu_intensive_task(task_complexity)

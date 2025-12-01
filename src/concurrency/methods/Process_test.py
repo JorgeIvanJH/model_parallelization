@@ -1,6 +1,6 @@
 import multiprocessing as mp
-from src.utils import cpu_intensive_task, sequential_execution, measure_time_decorator, store_results
-from src.utils import TASK_COMPLEXITY, NUM_TASKS, START_METHOD, NUM_REPS, RESULTS_FILE
+from src.concurrency.utils import cpu_intensive_task, sequential_execution, measure_time_decorator, store_results
+from src.concurrency.utils import TASK_COMPLEXITY, NUM_TASKS, START_METHOD, NUM_REPS, RESULTS_FILE
 
 def worker(queue, task_complexity):
     result = cpu_intensive_task(task_complexity)

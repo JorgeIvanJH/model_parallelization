@@ -1,6 +1,6 @@
 import multiprocessing as mp
-from src.utils import cpu_intensive_task, sequential_execution, measure_time_decorator, store_results
-from src.utils import TASK_COMPLEXITY, NUM_TASKS, NUM_WORKERS, NUM_REPS, RESULTS_FILE
+from src.concurrency.utils import cpu_intensive_task, sequential_execution, measure_time_decorator, store_results
+from src.concurrency.utils import TASK_COMPLEXITY, NUM_TASKS, NUM_WORKERS, NUM_REPS, RESULTS_FILE
 
 @measure_time_decorator(times=NUM_REPS)
 def parallel_execution(num_tasks, task_complexity):
