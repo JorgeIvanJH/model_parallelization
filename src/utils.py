@@ -8,8 +8,8 @@ TASK_COMPLEXITY = 10000000
 NUM_TASKS = 10
 START_METHOD = 'spawn'  # 'fork' , 'spawn' or 'forkserver'
 NUM_WORKERS = os.cpu_count()
-NUM_REPS = 30 # number of repetitions for averaging timings
-RESULTS_FILE = "results/times.json"
+NUM_REPS = 1 # number of repetitions for averaging timings
+RESULTS_FILE = "src/concurrency/testing/results/times.json"
 
 def _ensure_no_gil():
     supports_ft = sysconfig.get_config_var("Py_GIL_DISABLED") == 1

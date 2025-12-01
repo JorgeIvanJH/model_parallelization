@@ -1,6 +1,3 @@
-import sys, os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import threading
 import queue
 from src.utils import cpu_intensive_task, sequential_execution, measure_time_decorator, _ensure_no_gil, store_results

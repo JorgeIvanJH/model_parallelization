@@ -1,10 +1,6 @@
-import sys, os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from src.utils import cpu_intensive_task, sequential_execution, measure_time_decorator, store_results
 from src.utils import TASK_COMPLEXITY, NUM_TASKS, NUM_WORKERS, NUM_REPS, RESULTS_FILE
-import random
 
 @measure_time_decorator(times=NUM_REPS)
 def async_parallel_execution(num_tasks, task_complexity):
