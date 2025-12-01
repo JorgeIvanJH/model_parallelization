@@ -87,9 +87,9 @@ checkpoints_*/
 *.bin
 *.h5
 *.csv
+*.json
 weights/
 outputs/
-results/
 *.npz
 *.npy
 *.joblib
