@@ -38,13 +38,15 @@ if __name__ == "__main__":
 
             tqdm.write(f"  Testing on dataset with {X.shape[0]:,} rows")
 
-            y_hat_seq, sequential_time = sequential_execution(model, X, y)
+            y_hat_seq, sequential_time, sequential_memory = sequential_execution(model, X, y)
             tqdm.write(f"  Sequential time: {sequential_time:.2f}s")
+            tqdm.write(f"  Sequential memory: {sequential_memory:.2f} MB")
 
-            y_hat_par, parallel_time = parallel_execution(
+            y_hat_par, parallel_time, parallel_memory = parallel_execution(
                 model, X, y, n_jobs=NUM_PROCESSES
             )
             tqdm.write(f"  Parallel time:   {parallel_time:.2f}s")
+            tqdm.write(f"  Parallel memory: {parallel_memory:.2f} MB")
 
             assert np.array_equal(y_hat_seq, y_hat_par), \
                 "Predictions from sequential and parallel execution do not match!"
@@ -59,6 +61,8 @@ if __name__ == "__main__":
                 NUM_ROWS,
                 sequential_time,
                 parallel_time,
+                sequential_memory,
+                parallel_memory
             )
             tqdm.write("  Stored results")
         except Exception as e:

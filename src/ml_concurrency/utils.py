@@ -1,12 +1,12 @@
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
+import tracemalloc
+from functools import wraps
 import pandas as pd
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from concurrency.utils import measure_time_decorator
 import numpy as np
-import json
+import time
 from datetime import datetime
 
 def load_dataset(DATASET_PATH, NUM_ROWS):
@@ -27,18 +27,41 @@ def load_dataset(DATASET_PATH, NUM_ROWS):
     X = df.drop(columns=["Showed_up"])
     return X, y
 
-@measure_time_decorator(times=1)
+
+def measure_performance(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+
+        # BEGIN TIME AND MEMORY MEASUREMENT
+        tracemalloc.start()
+        start_snapshot = tracemalloc.take_snapshot()
+        start = time.perf_counter()
+        
+        result = func(*args, **kwargs)
+        
+        # END TIME AND MEMORY MEASUREMENT
+        end = time.perf_counter()
+        current, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+
+        # COMPUTE TIME AND MEMORY USAGE
+        execution_time = end - start
+        peak_mb = peak / (1024 ** 2)
+        return result, execution_time, peak_mb
+    return wrapper
+
+
+@measure_performance
 def sequential_execution(model, X, y):
     y_hat = model.predict(X)
     return y_hat
 
-@measure_time_decorator(times=1)
+@measure_performance
 def parallel_execution(model, X, y, n_jobs=-1):
 
     num_rows = X.shape[0]
     if num_rows == 0:
         return np.array([])
-
 
     # split the row indices so remainders are distributed evenly
     chunks = np.array_split(np.arange(num_rows), n_jobs)
@@ -53,7 +76,7 @@ def parallel_execution(model, X, y, n_jobs=-1):
     # concatenate in the original order and return (keeps alignment with X)
     return np.concatenate(results)
 
-def store_results(file_dir, ml_model_name, num_workers, num_rows, sequential_time, parallel_time):
+def store_results(file_dir, ml_model_name, num_workers, num_rows, sequential_time, parallel_time, sequential_memory, parallel_memory):
     """
     Read an existing CSV (if any) and append a new row with the provided information.
     Creates the file (and parent dirs) if it doesn't exist.
@@ -66,6 +89,8 @@ def store_results(file_dir, ml_model_name, num_workers, num_rows, sequential_tim
         "num_rows": num_rows,
         "sequential_time": sequential_time,
         "parallel_time": parallel_time,
+        "sequential_memory": sequential_memory,
+        "parallel_memory": parallel_memory
     }
 
     # read existing file or create new dataframe
