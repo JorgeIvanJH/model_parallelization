@@ -4,22 +4,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 import pandas as pd
 from concurrent.futures import ProcessPoolExecutor, as_completed
-import time
-import joblib
-
-from src.utils import measure_time_decorator
+from concurrency.utils import measure_time_decorator
 import numpy as np
+import json
+from datetime import datetime
 
-NUM_ROWS = int(1e8) # Number of rows to read from the dataset
-
-
-
-ROOT_DIR = os.path.abspath(os.path.join(os.getcwd(), "..", ".."))
-DATASET_PATH = os.path.join(ROOT_DIR, "data", "healthcare_noshows_appointments.csv")
-MODEL_PATH = os.path.join(ROOT_DIR,"src","ml","saved_models", "LogisticRegression_1150_28112025.joblib")
-NUM_PROCESSES = os.cpu_count()
-
-def load_dataset(DATASET_PATH=DATASET_PATH, NUM_ROWS=NUM_ROWS):
+def load_dataset(DATASET_PATH, NUM_ROWS):
     """Load and preprocess the healthcare no-shows dataset"""
 
     df = pd.read_csv(DATASET_PATH, dtype={'PatientId': 'category',
@@ -37,12 +27,12 @@ def load_dataset(DATASET_PATH=DATASET_PATH, NUM_ROWS=NUM_ROWS):
     X = df.drop(columns=["Showed_up"])
     return X, y
 
-@measure_time_decorator(times=5)
+@measure_time_decorator(times=1)
 def sequential_execution(model, X, y):
     y_hat = model.predict(X)
     return y_hat
 
-@measure_time_decorator(times=5)
+@measure_time_decorator(times=1)
 def parallel_execution(model, X, y, n_jobs=-1):
 
     num_rows = X.shape[0]
@@ -63,24 +53,30 @@ def parallel_execution(model, X, y, n_jobs=-1):
     # concatenate in the original order and return (keeps alignment with X)
     return np.concatenate(results)
 
-if __name__ == "__main__":
+def store_results(file_dir, ml_model_name, num_workers, num_rows, sequential_time, parallel_time):
+    """
+    Read an existing CSV (if any) and append a new row with the provided information.
+    Creates the file (and parent dirs) if it doesn't exist.
+    """
 
-    X, y = load_dataset()
-    model = joblib.load(MODEL_PATH)
+    row = {
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "ml_model_name": ml_model_name,
+        "num_workers": num_workers,
+        "num_rows": num_rows,
+        "sequential_time": sequential_time,
+        "parallel_time": parallel_time,
+    }
 
-    print("TESTING ON DATAWET WITH {} ROWS".format(X.shape[0]))
+    # read existing file or create new dataframe
+    if os.path.exists(file_dir):
+        try:
+            df = pd.read_csv(file_dir)
+        except Exception:
+            df = pd.DataFrame(columns=list(row.keys()))
+    else:
+        df = pd.DataFrame(columns=list(row.keys()))
 
-    # Sequential execution
-    y_hat_seq, seq_time = sequential_execution(model, X, y)
-    print(f"Sequential execution time: {seq_time:.2f} seconds")
-    # Parallel execution
-    y_hat_par, par_time = parallel_execution(model, X, y, n_jobs=NUM_PROCESSES)
-    print(f"Parallel execution time: {par_time:.2f} seconds")
-
-    # Verify results are the same
-    assert np.array_equal(y_hat_seq, y_hat_par), "Predictions from sequential and parallel execution do not match!"
-
-    # Speedup
-    speedup = seq_time / par_time
-    print(f"Speedup: {speedup:.2f}x")
-    print("OK")
+    # append and save
+    df = pd.concat([df, pd.DataFrame([row])], ignore_index=True)
+    df.to_csv(file_dir, index=False)
