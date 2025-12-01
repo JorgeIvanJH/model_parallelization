@@ -4,12 +4,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 import joblib
 import numpy as np
 from ml_concurrency.utils import load_dataset, sequential_execution, parallel_execution, store_results
-import time
+from itertools import product
+from tqdm import tqdm 
 
-
-NUM_ROWS = int(1e6) # Number of rows to read from the dataset
-NUM_PROCESSES = os.cpu_count()
-NUM_REPS = 1
+NUM_CORES = os.cpu_count()
 MODEL_NAME = "LogisticRegression.joblib"
 
 
@@ -21,27 +19,49 @@ RESULTS_PATH = os.path.join(ROOT_DIR, "src", "ml_concurrency", "testing", "resul
 
 
 if __name__ == "__main__":
+    ROW_OPTIONS = [int(1e6), int(1e7), int(1e8)]
+    PROCESS_OPTIONS = [
+        os.cpu_count() // 4,
+        os.cpu_count() // 2,
+        os.cpu_count(),
+        os.cpu_count() * 2,
+    ]
 
-    X, y = load_dataset(DATASET_PATH, NUM_ROWS)
-    model = joblib.load(MODEL_PATH)
+    comparison_pairs = list(product(ROW_OPTIONS, PROCESS_OPTIONS))
 
-    print("TESTING ON DATAWET WITH {} ROWS".format(X.shape[0]))
+    for NUM_ROWS, NUM_PROCESSES in tqdm(
+        comparison_pairs,
+        desc="Benchmarking",
+        unit="run"
+    ):
+        # Optional: show more info in the bar
+        tqdm.write(f"\nRows={NUM_ROWS:,}, Procs={NUM_PROCESSES}")
 
-    # Sequential execution
-    y_hat_seq, sequential_time = sequential_execution(model, X, y)
-    print(f"Sequential execution time: {sequential_time:.2f} seconds")
-    # Parallel execution
-    y_hat_par, parallel_time = parallel_execution(model, X, y, n_jobs=NUM_PROCESSES)
-    print(f"Parallel execution time: {parallel_time:.2f} seconds")
+        X, y = load_dataset(DATASET_PATH, NUM_ROWS)
+        model = joblib.load(MODEL_PATH)
 
-    # Verify results are the same
-    assert np.array_equal(y_hat_seq, y_hat_par), "Predictions from sequential and parallel execution do not match!"
+        tqdm.write(f"  Testing on dataset with {X.shape[0]:,} rows")
 
-    # Speedup
-    speedup = sequential_time / parallel_time
-    print(f"Speedup: {speedup:.2f}x")
+        y_hat_seq, sequential_time = sequential_execution(model, X, y)
+        tqdm.write(f"  Sequential time: {sequential_time:.2f}s")
 
-    # Store Results
-    store_results(RESULTS_PATH, MODEL_NAME.split(".")[0], NUM_PROCESSES, NUM_ROWS, sequential_time, parallel_time)
-    print("OK")
-    
+        y_hat_par, parallel_time = parallel_execution(
+            model, X, y, n_jobs=NUM_PROCESSES
+        )
+        tqdm.write(f"  Parallel time:   {parallel_time:.2f}s")
+
+        assert np.array_equal(y_hat_seq, y_hat_par), \
+            "Predictions from sequential and parallel execution do not match!"
+
+        speedup = sequential_time / parallel_time
+        tqdm.write(f"  Speedup: {speedup:.2f}x")
+
+        store_results(
+            RESULTS_PATH,
+            MODEL_NAME.split(".")[0],
+            NUM_PROCESSES,
+            NUM_ROWS,
+            sequential_time,
+            parallel_time,
+        )
+        tqdm.write("  Stored results ✅")
