@@ -78,6 +78,8 @@ Thumbs.db
 ~$*
 
 # Model / dataset artifacts (large files)
+data/Healthcare_Investments_and_Hospital_Stay.csv
+data/healthcare_noshows_appointments.csv
 models/
 checkpoints/
 checkpoints_*/
@@ -86,7 +88,6 @@ checkpoints_*/
 *.pth
 *.bin
 *.h5
-*.csv
 *.json
 weights/
 outputs/
@@ -94,6 +95,7 @@ outputs/
 *.npy
 *.joblib
 *.pkl
+*.txt
 
 # Large intermediate files
 *.tar

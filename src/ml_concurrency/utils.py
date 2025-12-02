@@ -12,7 +12,7 @@ import threading
 import psutil
 
 
-def load_dataset(DATASET_PATH, NUM_ROWS):
+def load_dataset(DATASET_PATH, NUM_ROWS, is_joblib_model=True):
     """Load and preprocess the healthcare no-shows dataset"""
 
     df = pd.read_csv(DATASET_PATH, dtype={'PatientId': 'category',
@@ -28,6 +28,30 @@ def load_dataset(DATASET_PATH, NUM_ROWS):
     df = pd.concat([df]*nrepeats + [df.sample(remiainder)], ignore_index=True)
     y = df["Showed_up"]
     X = df.drop(columns=["Showed_up"])
+
+    if not is_joblib_model:
+
+        # DATA PREPARATION (slight difference for LightGBM)
+        date_cols = ["ScheduledDay", "AppointmentDay"]
+
+        # 1. Extract useful components
+        for col in date_cols:
+            X[col + "_year"] = X[col].dt.year
+            X[col + "_month"] = X[col].dt.month
+            X[col + "_day"] = X[col].dt.day
+            X[col + "_dow"] = X[col].dt.dayofweek         # 0=Mon, 6=Sun
+            X[col + "_hour"] = X[col].dt.hour
+            X[col + "_is_weekend"] = (X[col].dt.dayofweek >= 5).astype("int8")
+            
+            # Optional: Part-of-day feature
+            X[col + "_part_of_day"] = pd.cut(
+                X[col].dt.hour,
+                bins=[-1, 6, 12, 17, 24],
+                labels=[0, 1, 2, 3],        # 0=night,1=morning,2=afternoon,3=evening
+                ordered=True
+            ).astype("int8")
+        X = X.drop(columns=date_cols)
+
     return X, y
 
 

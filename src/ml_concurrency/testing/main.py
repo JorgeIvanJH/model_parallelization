@@ -6,10 +6,15 @@ import numpy as np
 from ml_concurrency.utils import load_dataset, sequential_execution, parallel_execution, store_results
 from itertools import product
 from tqdm import tqdm 
+import lightgbm as lgb
 
+
+MODEL_NAME = "LightGBM.txt"  # Change to your model file name
+
+
+
+is_joblib_model = MODEL_NAME.endswith(".joblib")
 NUM_CORES = os.cpu_count()
-MODEL_NAME = "LogisticRegression.joblib"
-
 
 ROOT_DIR = os.path.abspath(os.path.join(os.getcwd(), "..", "..",".."))
 DATASET_PATH = os.path.join(ROOT_DIR, "data", "healthcare_noshows_appointments.csv")
@@ -20,7 +25,7 @@ RESULTS_PATH = os.path.join(ROOT_DIR, "src", "ml_concurrency", "testing", "resul
 
 if __name__ == "__main__":
     ROW_OPTIONS = [int(1e6), int(1e7), int(1e8)]
-    PROCESS_OPTIONS = list(range(1, NUM_CORES + NUM_CORES // 2 , 3)) + [NUM_CORES * 2]
+    PROCESS_OPTIONS = list(range(1, NUM_CORES * 2, 1))
 
     comparison_pairs = list(product(ROW_OPTIONS, PROCESS_OPTIONS))
 
@@ -33,8 +38,8 @@ if __name__ == "__main__":
             # Optional: show more info in the bar
             tqdm.write(f"\nRows={NUM_ROWS:,}, Procs={NUM_PROCESSES}")
 
-            X, y = load_dataset(DATASET_PATH, NUM_ROWS)
-            model = joblib.load(MODEL_PATH)
+            X, y = load_dataset(DATASET_PATH, NUM_ROWS,is_joblib_model)
+            model = joblib.load(MODEL_PATH) if is_joblib_model else lgb.Booster(model_file=MODEL_PATH)
 
             tqdm.write(f"  Testing on dataset with {X.shape[0]:,} rows")
 
