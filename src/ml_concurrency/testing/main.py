@@ -9,7 +9,7 @@ from tqdm import tqdm
 import lightgbm as lgb
 
 
-MODEL_NAME = "LogisticRegression.joblib"  # Change to your model file name
+MODEL_NAME = "LightGBM_GPU.txt"  # Change to your model file name
 
 
 

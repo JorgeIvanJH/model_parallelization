@@ -83,6 +83,7 @@ data/healthcare_noshows_appointments.csv
 models/
 checkpoints/
 checkpoints_*/
+*.onnx
 *.ckpt
 *.pt
 *.pth
