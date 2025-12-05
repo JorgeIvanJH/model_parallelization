@@ -4,6 +4,7 @@ import time
 import numpy as np
 from functools import wraps
 TIMEPERDAY = 1.0  # seconds to simulate query time per day
+NUMWORKERS = 8  # number of parallel workers to use
 
 def measure_time_decorator(func):
     @wraps(func)
@@ -54,6 +55,11 @@ def batch_worker(raw_data_queue, days_batch):
     for data in raw_data:
         raw_data_queue.put(data)
 
+def worker_full(day):
+    """Do both query and model in the same worker process."""
+    raw = query(day)
+    return model(raw)
+
 @measure_time_decorator
 def sequential_approach(days):
     """
@@ -98,7 +104,7 @@ def approach_1(days):
     return processed_data
 
 @measure_time_decorator
-def approach_2(days,num_workers=4):
+def approach_2(days,num_workers=NUMWORKERS):
     """
     query is called in parallel batches, [num_workers] processes
     model is called sequentially
@@ -120,10 +126,10 @@ def approach_2(days,num_workers=4):
     return processed_data
 
 @measure_time_decorator
-def approach_3(days, num_workers=4):
+def approach_3(days, num_workers=NUMWORKERS):
     """
     query is called in parallel batches, [num_workers] processes
-    model is called asynchronously after each data batch is retrieved
+    model is called asynchronously right after each query result is available
     """
     days_batches = split_into_workers(days, num_workers)
     raw_data_queue = mp.Queue()
@@ -146,19 +152,28 @@ def approach_3(days, num_workers=4):
 
     return processed_data
 
+@measure_time_decorator
+def approach_4(days, num_workers=NUMWORKERS):
+    """
+    query and model are both called in parallel using multiprocessing Pool
+    """
+    with mp.Pool(processes=num_workers) as pool:
+        processed_data = pool.map(worker_full, days)
+    return processed_data
+
 if __name__ == '__main__':
+    print(f"Testing with {NUMWORKERS} workers")
 
     days = list(range(1, 30))
 
-    methods = [sequential_approach,single_query_approach, approach_1, approach_2, approach_3]
+    methods = [sequential_approach,single_query_approach, approach_1, approach_2, approach_3, approach_4]
 
     previous_processed_data = None
     for method in methods:
         processed_data, elapsed_time = method(days)
         print(f"method: {method.__name__}, time: {elapsed_time:.2f} seconds")
-        print("processed_data:", processed_data)
         # VERIFY CONSISTENCY ACROSS METHODS
         if previous_processed_data is not None:
-            assert Counter(previous_processed_data) == Counter(processed_data)
+            assert Counter(previous_processed_data) == Counter(processed_data), "Inconsistent results between methods!"
         previous_processed_data = processed_data
 
