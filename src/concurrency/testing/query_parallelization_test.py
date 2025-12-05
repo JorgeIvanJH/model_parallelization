@@ -2,9 +2,11 @@ import multiprocessing as mp
 from collections import Counter
 import time
 import numpy as np
+from functools import wraps
 TIMEPERDAY = 1.0  # seconds to simulate query time per day
 
 def measure_time_decorator(func):
+    @wraps(func)
     def wrapper(*args, **kwargs):
         start_time = time.time()
         result = func(*args, **kwargs)
@@ -65,6 +67,16 @@ def sequential_approach(days):
     return processed_data
 
 @measure_time_decorator
+def single_query_approach(days):
+    """
+    query for all days in a single call
+    model is called once for all data
+    """
+    raw_data = batch_query(days)
+    processed_data = [model(data) for data in raw_data]
+    return processed_data
+
+@measure_time_decorator
 def approach_1(days):
     """
     query is called in parallel, 1 process per day
@@ -112,7 +124,6 @@ def approach_3(days, num_workers=4):
     """
     query is called in parallel batches, [num_workers] processes
     model is called asynchronously after each data batch is retrieved
-
     """
     days_batches = split_into_workers(days, num_workers)
     raw_data_queue = mp.Queue()
@@ -124,10 +135,12 @@ def approach_3(days, num_workers=4):
 
     processed_data = []
 
-    for _ in range(len(days_batches)):
-        raw_data = raw_data_queue.get()    # blocks until one batch is ready
-        processed = model(raw_data)        # run model immediately (as_completed)
+    num_results = len(days)
+    for _ in range(num_results):
+        raw_data_val = raw_data_queue.get()  # blocks until next item is available
+        processed = model(raw_data_val)
         processed_data.append(processed)
+
     for p in processes: # Wait for all processes to complete
         p.join()
 
@@ -137,14 +150,14 @@ if __name__ == '__main__':
 
     days = list(range(1, 30))
 
-    methods = [sequential_approach, approach_1, approach_2, approach_3]
+    methods = [sequential_approach,single_query_approach, approach_1, approach_2, approach_3]
 
+    previous_processed_data = None
     for method in methods:
         processed_data, elapsed_time = method(days)
         print(f"method: {method.__name__}, time: {elapsed_time:.2f} seconds")
-        
+        print("processed_data:", processed_data)
         # VERIFY CONSISTENCY ACROSS METHODS
-        previous_processed_data = None
         if previous_processed_data is not None:
             assert Counter(previous_processed_data) == Counter(processed_data)
         previous_processed_data = processed_data
