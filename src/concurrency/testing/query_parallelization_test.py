@@ -1,10 +1,11 @@
+import os
 import multiprocessing as mp
 from collections import Counter
 import time
 import numpy as np
 from functools import wraps
 TIMEPERDAY = 1.0  # seconds to simulate query time per day
-NUMWORKERS = 8  # number of parallel workers to use
+NUMWORKERS = os.cpu_count()  # number of parallel workers to use
 
 def measure_time_decorator(func):
     @wraps(func)
